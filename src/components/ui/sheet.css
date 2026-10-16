@@ -1,0 +1,172 @@
+.sheet-root {
+  --ease-spring:      cubic-bezier(0.16,  1.0,  0.3,  1.0);
+  --ease-gravity:     cubic-bezier(0.45,  0.0,  0.75, 0.35);
+  --ease-blur-enter:  cubic-bezier(0.22,  0.61, 0.36, 1.0);
+  --ease-blur-exit:   cubic-bezier(0.55,  0.06, 0.68, 0.19);
+  --ease-scrim-enter: cubic-bezier(0.0,   0.0,  0.2,  1.0);
+  --ease-scrim-exit:  cubic-bezier(0.4,   0.0,  1.0,  1.0);
+  --ease-fade-in:     cubic-bezier(0.0,   0.0,  0.2,  1.0);
+  --ease-fade-out:    cubic-bezier(0.4,   0.0,  1.0,  1.0);
+  --dur-panel-open:   800ms;
+  --dur-panel-close:  550ms;
+  --dur-scrim-open:   420ms;
+  --dur-scrim-close:  280ms;
+  --dur-blur-open:    680ms;
+  --dur-blur-close:   360ms;
+  --dur-opacity-open: 400ms;
+  --dur-opacity-close:280ms;
+  --dur-row-open:     600ms;
+  --dur-row-close:    260ms;
+  --delay-panel-open:  80ms;
+  --delay-scrim-open:  100ms;
+  --delay-blur-open:   80ms;
+  --delay-row-first:   160ms;
+  --delay-row-interval: 70ms;
+  --delay-row-close-interval: 30ms;
+  --sheet-blur:        32px;
+  --sheet-saturate:    180%;
+  --sheet-scrim-alpha: 0.35;
+  --sheet-bg:          rgba(255, 255, 255, 0.92);
+  --sheet-bg-dark:     rgba(15, 23, 42, 0.92);
+  --sheet-radius:      24px;
+}
+/* ── Overlay: Scrim + Blur ── */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px) saturate(100%);
+  -webkit-backdrop-filter: blur(0px) saturate(100%);
+  pointer-events: none;
+  transition:
+    background var(--dur-scrim-close) 0ms var(--ease-scrim-exit),
+    backdrop-filter var(--dur-blur-close) 0ms var(--ease-blur-exit),
+    -webkit-backdrop-filter var(--dur-blur-close) 0ms var(--ease-blur-exit);
+}
+.sheet-overlay.active {
+  background: rgba(0, 0, 0, var(--sheet-scrim-alpha));
+  backdrop-filter: blur(var(--sheet-blur)) saturate(var(--sheet-saturate));
+  -webkit-backdrop-filter: blur(var(--sheet-blur)) saturate(var(--sheet-saturate));
+  pointer-events: auto;
+  transition:
+    background var(--dur-scrim-open) var(--delay-scrim-open) var(--ease-scrim-enter),
+    backdrop-filter var(--dur-blur-open) var(--delay-blur-open) var(--ease-blur-enter),
+    -webkit-backdrop-filter var(--dur-blur-open) var(--delay-blur-open) var(--ease-blur-enter);
+}
+.sheet-overlay.closing {
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px) saturate(100%);
+  -webkit-backdrop-filter: blur(0px) saturate(100%);
+  pointer-events: auto;
+  transition:
+    background var(--dur-scrim-close) 0ms var(--ease-scrim-exit),
+    backdrop-filter var(--dur-blur-close) 0ms var(--ease-blur-exit),
+    -webkit-backdrop-filter var(--dur-blur-close) 0ms var(--ease-blur-exit);
+}
+/* ── Sheet Panel ── */
+.sheet-panel {
+  position: fixed;
+  left: 50%;
+  z-index: 1001;
+  width: calc(100vw - 32px);
+  max-width: 672px;
+  min-height: 55vh;
+  max-height: 85vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Hide scrollbar — keep scroll function */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  top: auto;
+  bottom: 0;
+  transform: translate(-50%, 105%);
+  opacity: 0;
+  background: var(--sheet-bg);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-radius: var(--sheet-radius);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+  transition: none;
+}
+.sheet-panel.active {
+  top: 50%;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+  opacity: 1;
+  transition:
+    transform var(--dur-panel-open) var(--delay-panel-open) var(--ease-spring),
+    opacity var(--dur-opacity-open) var(--delay-panel-open) var(--ease-fade-in);
+}
+.sheet-panel.closing {
+  top: 50%;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition:
+    opacity var(--dur-opacity-close) 0ms var(--ease-fade-out);
+}
+.dark .sheet-panel {
+  background: var(--sheet-bg-dark);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+.sheet-panel::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+/* ── Content Rows Stagger ── */
+.sheet-detail-row {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity var(--dur-row-open) var(--ease-fade-in),
+              transform var(--dur-row-open) var(--ease-spring);
+}
+.sheet-panel.active .sheet-detail-row:nth-child(1) { transition-delay: var(--delay-row-first);
+ }
+.sheet-panel.active .sheet-detail-row:nth-child(2) { transition-delay: calc(var(--delay-row-first) + var(--delay-row-interval) * 1);
+ }
+.sheet-panel.active .sheet-detail-row:nth-child(3) { transition-delay: calc(var(--delay-row-first) + var(--delay-row-interval) * 2);
+ }
+.sheet-panel.active .sheet-detail-row:nth-child(4) { transition-delay: calc(var(--delay-row-first) + var(--delay-row-interval) * 3);
+ }
+.sheet-panel.active .sheet-detail-row:nth-child(5) { transition-delay: calc(var(--delay-row-first) + var(--delay-row-interval) * 4);
+ }
+.sheet-panel.active .sheet-detail-row:nth-child(6) { transition-delay: calc(var(--delay-row-first) + var(--delay-row-interval) * 5);
+ }
+.sheet-panel.active .sheet-detail-row:nth-child(7) { transition-delay: calc(var(--delay-row-first) + var(--delay-row-interval) * 6);
+ }
+.sheet-panel.active .sheet-detail-row:nth-child(8) { transition-delay: calc(var(--delay-row-first) + var(--delay-row-interval) * 7);
+ }
+/* ── Target states (without these rows never transition) ── */
+.sheet-panel.active .sheet-detail-row {
+  opacity: 1;
+  transform: translateY(0);
+}
+.sheet-panel.closing .sheet-detail-row:nth-child(1) { transition-delay: 0ms;
+ }
+.sheet-panel.closing .sheet-detail-row:nth-child(2) { transition-delay: var(--delay-row-close-interval);
+ }
+.sheet-panel.closing .sheet-detail-row:nth-child(3) { transition-delay: calc(var(--delay-row-close-interval) * 2);
+ }
+.sheet-panel.closing .sheet-detail-row:nth-child(4) { transition-delay: calc(var(--delay-row-close-interval) * 3);
+ }
+.sheet-panel.closing .sheet-detail-row:nth-child(5) { transition-delay: calc(var(--delay-row-close-interval) * 4);
+ }
+.sheet-panel.closing .sheet-detail-row:nth-child(6) { transition-delay: calc(var(--delay-row-close-interval) * 5);
+ }
+.sheet-panel.closing .sheet-detail-row:nth-child(7) { transition-delay: calc(var(--delay-row-close-interval) * 6);
+ }
+.sheet-panel.closing .sheet-detail-row:nth-child(8) { transition-delay: calc(var(--delay-row-close-interval) * 7);
+ }
+.sheet-panel.closing .sheet-detail-row {
+  opacity: 0;
+  transform: translateY(16px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-overlay,
+  .sheet-panel,
+  .sheet-detail-row {
+    transition-duration: 0ms !important;
+  }
+}

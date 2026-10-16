@@ -1,38 +1,62 @@
 # PANSPACE UI
 
-个人复用的 React UI 组件库：只放「骨架 + 样式 + 动效」，不放业务内容。所有文案、图标、数据都由使用方以 children 传入。
+React 组件库，目前 2 个组件（Sheet、Button）。只提供 UI 骨架：结构、样式、动效；组件内没有任何业务内容，文案、图标、数据全部由使用方通过 children 传入。
 
-| 组件 | 说明 |
-| --- | --- |
-| Sheet | 居中弹窗：遮罩毛玻璃、面板弹性入场、内容逐行交错入场 |
-| Button | 按钮：primary / secondary / ghost 三种变体，sm / md / lg 三种尺寸 |
+标签：React · 无业务内容 · 动效可调
 
-## 目录结构
+## 名字由来
 
-```
-src/
-  index.ts               # 库入口
-  components/ui/
-    Sheet.tsx            # 弹窗骨架（结构 + 交互 + 时序）
-    sheet.css            # 弹窗样式与动画变量
-    Button.tsx           # 按钮
-examples/
-  SheetExample.tsx       # 示例：内容全部是占位符
-docs/
-  sheet-animation.md     # 动画系统与参数说明
-  provenance.md          # Sheet 骨架的来源与反解记录
-```
+仓库名里的 contact 来自组件的抽取来源（来源站点上的那个「联系」弹窗），不是这个仓库的用途。它是组件库，不是页面模板，也不是联系页；组件内部没有表单、没有邮箱字段、没有任何与联系相关的内容。
 
-## 依赖
+## 效果预览
 
-```bash
-npm i motion @phosphor-icons/react
-```
+暂无截图。这里不放无法验证的图片，只做客观描述：
 
-- motion：动画库（也可以换成 framer-motion，改一下导入路径即可）
-- @phosphor-icons/react：Sheet 的关闭按钮用了 XIcon
+- Sheet：页面中央出现一块面板，背后是全屏遮罩并带毛玻璃模糊；面板从下方上浮到居中并淡入；面板内的内容行依次淡入上移（首行延迟 160ms，之后每行递增 70ms）；点击遮罩或按 Esc 关闭，关闭时内容行反向错开退场。
+- Button：三种变体（实心蓝、半透明、无边框）乘三种尺寸。
+
+想看实际效果，本地跑起来最快，见下面的「快速开始」。
+
+## 组件一览
+
+| 组件 | 说明 | 源码 | 文档 |
+| --- | --- | --- | --- |
+| Sheet | 居中弹窗：遮罩毛玻璃、面板弹性入场、内容逐行交错入场 | `src/components/ui/Sheet.tsx` | `docs/sheet-animation.md` |
+| Button | 按钮：primary / secondary / ghost 三种变体，sm / md / lg 三种尺寸 | `src/components/ui/Button.tsx` | 源文件里的 VARIANT / SIZE 两张表 |
+
+## 这是什么 / 不是什么
+
+- 是：无业务内容的骨架组件。结构、类名、动效参数都可复用，内容由你提供。
+- 是：动效参数化的组件。所有时长、延迟、缓动都是 CSS 变量，改一处即可整体改速。
+- 不是：UI 框架全家桶。目前只有 2 个组件，没有表单、表格、布局系统、主题系统。
+- 不是：页面模板或设计系统。没有页面级布局，也没有设计规范文档。
+- 不是：开箱即用的工程。本仓库没有 package.json，跑不了 npm run dev，需要放进你自己的 React 工程，见下一节。
 
 ## 快速开始
+
+最小可运行清单：一个 React + TypeScript 工程、Tailwind CSS、两个依赖包。本仓库不提供工程脚手架，下面以 Vite 为例，Next 同理。
+
+1. 建一个空白工程
+   npm create vite@latest sheet-preview -- --template react-ts
+   cd sheet-preview
+
+2. 装依赖
+   npm i motion @phosphor-icons/react
+   npm i -D tailwindcss @tailwindcss/vite
+
+3. 接上 Tailwind：vite.config.ts 里加上 tailwindcss() 插件，入口 CSS 里写 @import "tailwindcss";
+
+4. dark 变体用 class 策略：Tailwind v4 在入口 CSS 里加 @custom-variant dark (&:where(.dark, .dark *));，v3 把 darkMode 配成 class。细节见「使用要点」第 5 条。
+
+5. 把本仓库的 src/components/ui/ 整个目录复制到工程的 src/components/ui/
+
+6. 把 examples/SheetExample.tsx 复制到工程的 src/SheetExample.tsx，并把它的导入从 "../src" 改成 "./components/ui/Sheet" 与 "./components/ui/Button"（示例用的是本仓库的库入口路径，在工程里直接从组件文件导入更直接）
+
+7. 在 src/App.tsx 里渲染 SheetExample，然后 npm run dev
+
+想看暗色效果，在 index.html 的 html 标签上加 class="dark"。
+
+最小用法（不起示例文件，直接写）：
 
 ```tsx
 "use client";
@@ -62,7 +86,7 @@ export function Demo() {
 }
 ```
 
-完整写法见 `examples/SheetExample.tsx`。
+关于示例文件的定位：examples/SheetExample.tsx 只演示两件事 —— API 怎么调（isOpen / onClose / ariaLabel / children），以及逐行交错入场怎么写（每行套一个 sheet-detail-row）。里面的文案是占位符，它不是内容结构模板，不建议照抄它的行数、层级和排版；弹窗里放什么、放几行，由你的场景决定。
 
 ## 使用要点
 
@@ -86,9 +110,26 @@ export function Demo() {
 - 打开时锁定页面滚动，关闭后恢复
 - 系统开启 prefers-reduced-motion: reduce 时所有过渡时长归零
 
+## 目录结构
+
+```
+src/
+  index.ts               # 库入口
+  components/ui/
+    Sheet.tsx            # 弹窗骨架（结构 + 交互 + 时序）
+    sheet.css            # 弹窗样式与动画变量
+    Button.tsx           # 按钮
+examples/
+  SheetExample.tsx       # 示例：内容全部是占位符，只演示 API 与交错入场写法
+docs/
+  sheet-animation.md     # 动画系统与参数说明
+  provenance.md          # Sheet 骨架的来源与反解记录
+  demo-guideline.md      # 写 demo 的规范：展示组件本身，不要编造业务内容
+```
+
 ## 后续计划
 
-这个仓库会陆续加入我自己的原创 UI 组件，同样是「骨架 + 样式 + 动效」，不含业务内容。新组件放 src/components/ui/，示例放 examples/，文档放 docs/。
+这个仓库会陆续加入我自己的原创 UI 组件，同样是「骨架 + 样式 + 动效」，不含业务内容。新组件放 src/components/ui/，示例放 examples/，文档放 docs/。每次加组件时同步更新上面的组件一览表。
 
 ## 来源与版权
 
